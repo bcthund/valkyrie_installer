@@ -67,15 +67,19 @@ if [ "$answer" != "${answer#[Yy]}" ] ;then
     # Grab Source - If directory exists, use it without change
         if [ ! -d "./src/valkyrie_tmp" ] ;then
             echo
-            printf "${PURPLE}Source [Valkyrie]: ${BLUE}Pull current Valkyrie source (will install subservsion)${NC}\n"
-            printf "${YELLOW}Warning! Modifications were made to source files for missing includes for compile to succeed. Using the subversion copy will likely need manual source edits to work.${NC}\n"
-            echo -n "${BLUE}Use current source ${GREEN} (y/n)? ${NC}"; read answer;
+            
+            printf "${PURPLE}Source [Valkyrie]: ${BLUE}Use provided source snapshot${NC}"
+            if [ "$answer" != "${answer#[Yy]}" ] ;then printf " ${GREEN}(y/n)? ${NC} "; read answer2; else echo; fi
+            
+            #printf "${PURPLE}Source [Valkyrie]: ${BLUE}Pull current Valkyrie source (will install subservsion)${NC}\n"
+            #printf "${YELLOW}Warning! Modifications were made to source files for missing includes for compile to succeed. Using the subversion copy will likely need manual source edits to work.${NC}\n"
+            #echo -n "${BLUE}Use current source ${GREEN} (y/n)? ${NC}"; read answer;
             cmd "mkdir -pv ./src/valkyrie_tmp/build"
             if [ "$answer" != "${answer#[Yy]}" ] ;then
+                cmd "rsync -a ./src/valkyrie-src/valkyrie/ ./src/valkyrie_tmp/build/"
+            else
                 cmd "sudo apt install subversion"
                 cmd "svn co svn://svn.valgrind.org/valkyrie/trunk ./src/valkyrie_tmp/build/"
-            else
-                cmd "rsync -a ./src/valkyrie-src/valkyrie/ ./src/valkyrie_tmp/build/"
             fi
         fi
 
