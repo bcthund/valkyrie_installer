@@ -73,7 +73,7 @@ echo -e
 echo -e -n "${PURPLE}Install Valkyrie ${GREEN}(y/n/a)? ${NC}"
 read answer
 echo -e
-if [ "$answer" != "${answer#[Yy]}" ] ;then
+if [ "$answer" != "${answer#[YyAa]}" ] ;then
     if [ "$answer" != "${answer#[Aa]}" ] ;then answer2="y"; else answer2=""; fi
 
     # PPAs
