@@ -113,7 +113,8 @@ if [ "$answer" != "${answer#[YyAa]}" ] ;then
             if [ "$answer2" != "${answer2#[Yy]}" ] ;then
                 cmd "rsync -a ./src/valkyrie-src/valkyrie/ ./src/valkyrie_tmp/build/"
             else
-                cmd "sudo apt install subversion"
+                if ! command -v svn &> /dev/null; then cmd "sudo apt install subversion"; fi
+                #cmd "sudo apt install subversion"
                 cmd "svn co svn://svn.valgrind.org/valkyrie/trunk ./src/valkyrie_tmp/build/"
             fi
         fi
