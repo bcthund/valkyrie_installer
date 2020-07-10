@@ -95,7 +95,7 @@ if [ "$answer" != "${answer#[YyAa]}" ] ;then
         if [ "$answer" != "${answer#[Yy]}" ] ;then printf " ${GREEN}(y/n)? ${NC} "; read answer2; else echo; fi
         if [ "$answer2" != "${answer2#[Yy]}" ] ;then
             #libqtcore4 - might be needed to actually run if it compiles
-            cmd "sudo apt install libqt4-dev"
+            cmd "printf '%s\n' y | sudo apt install libqt4-dev"
         fi
 
     # Create Directories
@@ -119,7 +119,7 @@ if [ "$answer" != "${answer#[YyAa]}" ] ;then
             if [ "$answer2" != "${answer2#[Yy]}" ] ;then
                 cmd "rsync -a ./src/valkyrie-src/valkyrie/ ./src/valkyrie_tmp/build/"
             else
-                if ! command -v svn &> /dev/null; then cmd "sudo apt install subversion"; fi
+                if ! command -v svn &> /dev/null; then cmd "sudo apt -qy install subversion"; fi
                 #cmd "sudo apt install subversion"
                 cmd "svn co svn://svn.valgrind.org/valkyrie/trunk ./src/valkyrie_tmp/build/"
             fi
