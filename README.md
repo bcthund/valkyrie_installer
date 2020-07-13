@@ -15,6 +15,8 @@ Options:
   -h, --help            show this help message and exit
   -v, --verbose         print commands being run before running them
   -d, --debug           print commands to be run but do not execute them
+  --in-testing          Enable use of in-testing features
+  --tmp=DIRECTORY       not used, passed from fresh_install script
 </pre>
 
 ## Packages for Reference (installed automatically):
