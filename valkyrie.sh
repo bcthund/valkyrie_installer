@@ -24,6 +24,9 @@ working_dir=$PWD
 DEBUG=false
 VERBOSE=false
 IN_TESTING=false
+EXTRACT=true
+TMP_DIR=""
+SRC_DIR=""
 FLAGS=""
 OTHER_ARGUMENTS=""
 
@@ -54,8 +57,15 @@ do
         echo -e "  -v, --verbose         print commands being run before running them"
         echo -e "  -d, --debug           print commands to be run but do not execute them"
         echo -e "  --in-testing          Enable use of in-testing features"
+        #echo -e "  --tmp=DIRECTORY       not used, passed from fresh_install script"
         echo -e "${NC}"
         exit
+        shift # Remove from processing
+        ;;
+        --tmp=*)
+        EXTRACT=false
+        TMP_DIR="$(echo ${arg#*=} | sed 's:/*$::')"
+        FLAGS="$FLAGS--tmp=${TMP_DIR} "
         shift # Remove from processing
         ;;
         *)
@@ -99,46 +109,44 @@ if [ "$answer" != "${answer#[YyAa]}" ] ;then
             cmd "printf '%s\n' y | sudo apt install libqt4-dev"
         fi
 
+
     # Create Directories
         echo -e
-        printf "${PURPLE}Source [Valkyrie]: ${BLUE}Create Temp Directories${NC}\n"
-        if [ -d "./src/valkyrie_tmp" ] ;then
-            printf "${BLUE}Build directory already exists, remove first${NC}\n"
-            if [ "$answer" != "${answer#[Yy]}" ] ;then printf " ${GREEN}(y/n)? ${NC} "; read answer2; else echo; fi
-            if [ "$answer2" != "${answer2#[Yy]}" ] ;then
-                cmd "sudo rm -rf ./src/valkyrie_tmp"
+        printf "${BLUE}Create Temp Directory${NC}\n"
+        SRC_DIR=$(mktemp -d -t valkyrie-XXXXXX)
+        ctrl_c() {
+            cmd "cd '${working_dir}'"
+            echo -e;
+            echo -e -n "${BLUE}Do you want to remove temporary files in '${SRC_DIR}' ${GREEN}(y/n)? ${NC}"; read -e -i "y" answer; echo;
+            if [ "$answer" != "${answer#[Yy]}" ] ;then
+                eval "sudo rm -rf ${SRC_DIR}";
             fi
-        fi
+            echo -e;
+            echo -e;
+            exit 0;
+        }
+        echo -e "${YELLOW}Temp directory: '${SRC_DIR}'${NC}"
+        
 
     # Grab Source - If directory exists, use it without change
-        if [ ! -d "./src/valkyrie_tmp" ] ;then
-            echo -e
-            
-            printf "${PURPLE}Source [Valkyrie]: ${BLUE}Use provided source snapshot${NC}"
-            if [ "$answer" != "${answer#[Yy]}" ] ;then printf " ${GREEN}(y/n)? ${NC} "; read answer2; else echo; fi
-            cmd "mkdir -pv ./src/valkyrie_tmp/build"
-            if [ "$answer2" != "${answer2#[Yy]}" ] ;then
-                cmd "rsync -a ./src/valkyrie-src/valkyrie/ ./src/valkyrie_tmp/build/"
-            else
-                if ! command -v svn &> /dev/null; then cmd "sudo apt -qy install subversion"; fi
-                #cmd "sudo apt install subversion"
-                cmd "svn co svn://svn.valgrind.org/valkyrie/trunk ./src/valkyrie_tmp/build/"
-            fi
+        echo -e           
+        printf "${PURPLE}Source [Valkyrie]: ${BLUE}Use provided source snapshot${NC}"
+        if [ "$answer" != "${answer#[Yy]}" ] ;then printf " ${GREEN}(y/n)? ${NC} "; read answer2; else echo; fi
+        cmd "mkdir -pv ${SRC_DIR}/build"
+        if [ "$answer2" != "${answer2#[Yy]}" ] ;then
+            cmd "rsync -a ./src/valkyrie-src/valkyrie/ ${SRC_DIR}/build/"
+        else
+            if ! command -v svn &> /dev/null; then cmd "sudo apt -qy install subversion"; fi
+            #cmd "sudo apt install subversion"
+            cmd "svn co svn://svn.valgrind.org/valkyrie/trunk ${SRC_DIR}/build/"
         fi
 
     # Build and install
         echo -e
-        printf "${PURPLE}Source [Valkyrie]: ${BLUE}Entering './src/valkyrie_tmp/build'${NC}\n"
-        cmd "cd ./src/valkyrie_tmp/build"
+        printf "${PURPLE}Source [Valkyrie]: ${BLUE}Entering '${SRC_DIR}/build'${NC}\n"
+        cmd "cd ${SRC_DIR}/build"
         cmd "echo -e $PWD"
         cmd "ls -al"
-        ctrl_c() {
-            echo -e;
-            cmd "cd '${working_dir}'";
-            cmd "sudo rm -rf ./src/valkyrie_tmp";
-            echo -e;
-            exit 0;
-        }
 
         echo -e
         printf "${PURPLE}Source [Valkyrie]: ${BLUE}Run 'qmake-qt4'${NC}"
@@ -162,15 +170,14 @@ if [ "$answer" != "${answer#[YyAa]}" ] ;then
         fi
         
         echo -e
-        printf "${PURPLE}Source [Valkyrie]: ${BLUE}Leaving './src/valkyrie_tmp/build'${NC}\n"
+        printf "${PURPLE}Source [Valkyrie]: ${BLUE}Leaving '${SRC_DIR}/build'${NC}\n"
         cmd "cd '${working_dir}'";
-        ctrl_c() { echo -e; echo -e; exit 0; }
         
     # Removing build files
         echo -e
-        printf "${PURPLE}Source [Valkyrie]: ${BLUE}Remove './src/valkyrie_tmp'${NC}"
+        printf "${PURPLE}Source [Valkyrie]: ${BLUE}Remove '${SRC_DIR}'${NC}"
         if [ "$answer" != "${answer#[Yy]}" ] ;then printf " ${GREEN}(y/n)? ${NC} "; read answer2; else echo; fi
         if [ "$answer2" != "${answer2#[Yy]}" ] ;then
-            cmd "sudo rm -rf ./src/valkyrie_tmp";
+            cmd "sudo rm -rf ${SRC_DIR}";
         fi
 fi
